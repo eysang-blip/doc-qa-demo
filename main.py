@@ -16,8 +16,9 @@ from google import genai
 from google.genai import errors, types
 
 DOC_PATH = Path(__file__).parent / "docs" / "patch_summary.txt"
-# gemini-2.5-flash는 신규 사용자 사용 불가, 3.8-flash는 응답이 없어서(2026-11-11 확인) 3.5-flash 사용
-MODEL = "gemini-3.5-flash"
+# 2026-11-11 확인: 2.5-flash는 신규 사용자 사용 불가(404), 3.8-flash는 응답 없음,
+# 3.5-flash는 무료 티어 하루 20회 제한이라 평가(20문항 x 여러 번)에 부족 → flash-lite 사용
+MODEL = "gemini-3.5-flash-lite"
 TIMEOUT_MS = 60_000
 
 # 예: "1. 업데이트 44.1 (2026.11.03)"

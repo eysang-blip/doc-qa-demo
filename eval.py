@@ -26,6 +26,7 @@ import main
 ROOT = Path(__file__).parent
 DB_PATH = ROOT / "qa_log.db"
 QUESTIONS_PATH = ROOT / "eval_questions.json"
+REQUEST_GAP_SEC = 4  # 무료 티어 분당 한도(RPM)에 걸리지 않도록 요청 사이 대기
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -144,6 +145,7 @@ def run_eval(note: str | None, limit: int | None) -> int:
         conn.commit()
         mark = "O" if ok else "X"
         print(f"  {mark} Q{q['id']:>2} {q['question']}" + ("" if ok else f"  → {reason}"))
+        time.sleep(REQUEST_GAP_SEC)
 
     conn.close()
     return run_id
