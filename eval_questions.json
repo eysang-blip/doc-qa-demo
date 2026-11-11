@@ -10,7 +10,7 @@
   {"id": 9,  "category": "단일사실", "question": "수영 속도는 얼마나 빨라졌어?", "keywords": ["25"], "sources": ["43.1"]},
   {"id": 10, "category": "단일사실", "question": "발차기는 어떻게 사용해?", "keywords": ["우클릭"], "sources": ["43.1"]},
   {"id": 11, "category": "단일사실", "question": "RPD의 피해량과 연사 속도(RPM)는?", "keywords": ["43", "750"], "sources": ["42.3"]},
-  {"id": 12, "category": "단일사실", "question": "메타 로테이션은 몇 개월마다 무기군을 바꿔?", "keywords": ["4"], "sources": ["42.3"]},
+  {"id": 12, "category": "단일사실", "question": "메타 로테이션은 몇 개월마다 무기군을 바꿔?", "keywords": ["4개월"], "sources": ["42.3"]},
   {"id": 13, "category": "단일사실", "question": "기본 훈련은 몇 개 챕터로 되어 있어?", "keywords": ["17"], "sources": ["42.2"]},
   {"id": 14, "category": "단일사실", "question": "새 컨텐더 이름이 뭐야?", "keywords": ["글라시아"], "sources": ["42.2"]},
   {"id": 15, "category": "다중패치", "question": "발차기와 관련된 변경은 어느 패치들에 있었어?", "keywords": ["43.1", "44.1"], "sources": ["43.1", "44.1"]},
@@ -18,5 +18,11 @@
   {"id": 17, "category": "문서없음", "question": "43.2에서 새로 추가된 총기는 뭐야?", "expect_not_found": true},
   {"id": 18, "category": "문서없음", "question": "에란겔 맵은 어떻게 바뀌었어?", "expect_not_found": true},
   {"id": 19, "category": "문서없음", "question": "42.2 경쟁전 시즌 보상은 뭐야?", "expect_not_found": true},
-  {"id": 20, "category": "잘못된전제", "question": "43.2에서 추가된 RPD의 피해량은 얼마야?", "keywords": ["42.3", "43"], "sources": ["42.3"]}
+  {"id": 20, "category": "잘못된전제", "question": "43.2에서 추가된 RPD의 피해량은 얼마야?", "keywords": ["42.3", "43"], "sources": ["42.3"]},
+  {"id": 21, "category": "다중패치", "question": "M249는 패치마다 어떻게 바뀌었어?", "keywords": ["42.3", "43.1", "44.1"], "sources": ["42.3", "43.1", "44.1"]},
+  {"id": 22, "category": "계산", "question": "스페셜 차량 스킨 슬롯은 몇 개 늘었어?", "keywords": ["4개"], "sources": ["43.2"]},
+  {"id": 23, "category": "단일사실", "question": "가장 최근 패치는 몇 버전이고 언제 나왔어?", "keywords": ["44.1", "2026.11.03|2026년 11월 3일|11월 3일"], "sources": ["44.1"]},
+  {"id": 24, "category": "부분정보", "question": "44.2에서는 뭐가 바뀌어?", "keywords": ["상자", "열쇠"], "sources": ["44.1"]},
+  {"id": 25, "category": "잘못된전제", "question": "42.2에서 추가된 발차기는 어떻게 써?", "keywords": ["43.1", "우클릭"], "sources": ["43.1"]},
+  {"id": 26, "category": "문서없음", "question": "PUBG x IVE 콜라보는 언제까지 진행돼?", "expect_not_found": true}
 ]

@@ -69,9 +69,24 @@ def cited_versions(answer: str) -> set[str]:
     return found
 
 
+def has_keyword(answer: str, keyword: str) -> bool:
+    """키워드가 답변에 있는지 확인한다.
+
+    숫자 키워드는 앞뒤에 다른 숫자나 '.'이 붙으면 인정하지 않는다.
+    (버그 수정: 예전에는 '4'가 '43.2' 안에 있어도 정답 처리됐다)
+    """
+    normalized = answer.replace(" ", "")
+    kw = keyword.replace(" ", "")
+    if re.fullmatch(r"[\d.]+", kw):
+        return re.search(rf"(?<![\d.]){re.escape(kw)}(?![\d.]|\.\d)", normalized) is not None
+    return kw in normalized
+
+
 def grade(q: dict, answer: str) -> tuple[bool, str | None]:
     """(정답 여부, 실패 이유)를 돌려준다."""
-    refused = NOT_FOUND_MARK in answer
+    # 답변이 거절 문구로 시작할 때만 거절로 본다
+    # (v2는 부분 답변 뒤에 '그 외 내용은 문서에 없습니다'를 붙일 수 있음)
+    refused = answer.strip().startswith(NOT_FOUND_MARK)
 
     if q.get("expect_not_found"):
         if refused:
@@ -81,8 +96,9 @@ def grade(q: dict, answer: str) -> tuple[bool, str | None]:
     if refused:
         return False, "과잉 거절: 문서에 있는데 없다고 함"
 
-    normalized = answer.replace(" ", "")
-    missing = [k for k in q["keywords"] if k.replace(" ", "") not in normalized]
+    # "a|b" = a 또는 b 중 하나만 있어도 인정 (예: 2026.11.03|2026년 11월 3일)
+    missing = [k for k in q["keywords"]
+               if not any(has_keyword(answer, alt) for alt in k.split("|"))]
     if missing:
         return False, f"키워드 누락: {', '.join(missing)}"
 
@@ -93,11 +109,11 @@ def grade(q: dict, answer: str) -> tuple[bool, str | None]:
     return True, None
 
 
-def ask_with_retry(client, patches, question: str, tries: int = 3) -> str:
+def ask_with_retry(client, patches, question: str, version: str, tries: int = 3) -> str:
     """503(과부하)·429(한도 초과)는 잠시 기다렸다가 다시 시도한다."""
     for attempt in range(tries):
         try:
-            return main.answer(client, patches, question)
+            return main.answer(client, patches, question, version)
         except errors.APIError as e:
             if e.code not in (429, 503) or attempt == tries - 1:
                 raise
@@ -107,7 +123,7 @@ def ask_with_retry(client, patches, question: str, tries: int = 3) -> str:
     raise RuntimeError("unreachable")
 
 
-def run_eval(note: str | None, limit: int | None) -> int:
+def run_eval(version: str, note: str | None, limit: int | None) -> int:
     questions = json.loads(QUESTIONS_PATH.read_text(encoding="utf-8"))
     if limit:
         questions = questions[:limit]
@@ -118,11 +134,11 @@ def run_eval(note: str | None, limit: int | None) -> int:
 
     cur = conn.execute(
         "INSERT INTO runs (started_at, model, prompt_version, note) VALUES (?, ?, ?, ?)",
-        (datetime.now().isoformat(timespec="seconds"), main.MODEL, main.PROMPT_VERSION, note),
+        (datetime.now().isoformat(timespec="seconds"), main.MODEL, version, note),
     )
     run_id = cur.lastrowid
     conn.commit()
-    print(f"[run {run_id}] model={main.MODEL} prompt={main.PROMPT_VERSION} 문항 {len(questions)}개\n")
+    print(f"[run {run_id}] model={main.MODEL} prompt={version} 문항 {len(questions)}개\n")
 
     for q in questions:
         expected = "문서에 없음" if q.get("expect_not_found") else (
@@ -130,7 +146,7 @@ def run_eval(note: str | None, limit: int | None) -> int:
         )
         start = time.perf_counter()
         try:
-            answer = ask_with_retry(client, patches, q["question"])
+            answer = ask_with_retry(client, patches, q["question"], version)
             ok, reason = grade(q, answer)
         except Exception as e:  # API 오류도 결과로 남긴다
             answer, ok, reason = None, False, f"API 오류: {type(e).__name__}"
@@ -149,6 +165,27 @@ def run_eval(note: str | None, limit: int | None) -> int:
 
     conn.close()
     return run_id
+
+
+def regrade(run_id: int) -> None:
+    """API를 다시 부르지 않고, 저장된 답변을 현재 채점 규칙으로 다시 채점한다."""
+    questions = {q["id"]: q for q in json.loads(QUESTIONS_PATH.read_text(encoding="utf-8"))}
+    conn = connect()
+    rows = conn.execute(
+        "SELECT id, qid, answer, correct FROM results WHERE run_id = ? AND answer IS NOT NULL",
+        (run_id,),
+    ).fetchall()
+    changed = 0
+    for row_id, qid, answer, old in rows:
+        ok, reason = grade(questions[qid], answer)
+        if int(ok) != old:
+            changed += 1
+            print(f"  Q{qid}: {'X→O' if ok else 'O→X'} {reason or ''}")
+        conn.execute("UPDATE results SET correct = ?, fail_reason = ? WHERE id = ?",
+                     (int(ok), reason, row_id))
+    conn.commit()
+    conn.close()
+    print(f"run {run_id} 재채점 완료: {changed}개 문항 결과 변경")
 
 
 def report() -> None:
@@ -191,13 +228,54 @@ def report() -> None:
     conn.close()
 
 
+def compare(before: int, after: int) -> None:
+    """같은 질문(qid)을 두 실행 사이에서 비교한다 (results 셀프 조인)."""
+    conn = connect()
+    rows = conn.execute("""
+        SELECT a.qid, a.category, a.question,
+               a.correct AS before_ok, b.correct AS after_ok,
+               a.fail_reason, b.fail_reason
+        FROM results a
+        JOIN results b ON b.qid = a.qid AND b.run_id = ?
+        WHERE a.run_id = ? AND a.correct <> b.correct
+        ORDER BY b.correct DESC, a.qid
+    """, (after, before)).fetchall()
+
+    acc = dict(conn.execute("""
+        SELECT run_id, printf('%d/%d (%.1f%%)', SUM(correct), COUNT(*), 100.0 * AVG(correct))
+        FROM results WHERE run_id IN (?, ?) GROUP BY run_id
+    """, (before, after)).fetchall())
+    conn.close()
+
+    print(f"\n=== run {before} → run {after} 비교 ===")
+    print(f"  정답률: {acc.get(before)} → {acc.get(after)}")
+    if not rows:
+        print("  결과가 바뀐 문항 없음")
+    for qid, cat, question, b_ok, a_ok, b_reason, a_reason in rows:
+        if a_ok:
+            print(f"  [개선] Q{qid} ({cat}) {question}\n         이전 실패 이유: {b_reason}")
+        else:
+            print(f"  [악화] Q{qid} ({cat}) {question}\n         새 실패 이유: {a_reason}")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="문서 Q&A 평가")
+    parser.add_argument("--prompt", default=main.PROMPT_VERSION, choices=main.QA_PROMPTS,
+                        help="평가할 프롬프트 버전")
     parser.add_argument("--note", help="이번 실행에 남길 메모")
     parser.add_argument("--limit", type=int, help="앞에서부터 N문항만 실행")
     parser.add_argument("--report", action="store_true", help="실행 없이 리포트만 출력")
+    parser.add_argument("--compare", nargs=2, type=int, metavar=("BEFORE", "AFTER"),
+                        help="두 run_id의 문항별 결과 비교")
+    parser.add_argument("--regrade", type=int, metavar="RUN_ID",
+                        help="저장된 답변을 현재 채점 규칙으로 다시 채점")
     args = parser.parse_args()
 
-    if not args.report:
-        run_eval(args.note, args.limit)
-    report()
+    if args.regrade:
+        regrade(args.regrade)
+    elif args.compare:
+        compare(*args.compare)
+    else:
+        if not args.report:
+            run_eval(args.prompt, args.note, args.limit)
+        report()
