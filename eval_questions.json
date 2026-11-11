@@ -1,0 +1,22 @@
+[
+  {"id": 1,  "category": "단일사실", "question": "44.1에서 차량 체력은 얼마나 올랐어?", "keywords": ["8", "15"], "sources": ["44.1"]},
+  {"id": 2,  "category": "단일사실", "question": "경쟁전 시즌 44 보상은 뭐야?", "keywords": ["P90"], "sources": ["44.1"]},
+  {"id": 3,  "category": "단일사실", "question": "미니버스 트렁크 용량은 얼마야?", "keywords": ["300"], "sources": ["44.1"]},
+  {"id": 4,  "category": "단일사실", "question": "메타 로테이션은 언제 다시 시작해?", "keywords": ["2027"], "sources": ["44.1"]},
+  {"id": 5,  "category": "단일사실", "question": "모터 글라이더는 맵마다 몇 대 나와?", "keywords": ["6"], "sources": ["43.2"]},
+  {"id": 6,  "category": "단일사실", "question": "스페셜 차량 스킨 슬롯은 몇 개로 늘었어?", "keywords": ["7"], "sources": ["43.2"]},
+  {"id": 7,  "category": "단일사실", "question": "방장이 팀원 레디 없이 매칭을 시작할 수 있게 된 건 어느 패치야?", "keywords": ["43.2"], "sources": ["43.2"]},
+  {"id": 8,  "category": "단일사실", "question": "LMG 조준 전환 시간은 어떻게 바뀌었어?", "keywords": ["0.30", "0.37"], "sources": ["43.1"]},
+  {"id": 9,  "category": "단일사실", "question": "수영 속도는 얼마나 빨라졌어?", "keywords": ["25"], "sources": ["43.1"]},
+  {"id": 10, "category": "단일사실", "question": "발차기는 어떻게 사용해?", "keywords": ["우클릭"], "sources": ["43.1"]},
+  {"id": 11, "category": "단일사실", "question": "RPD의 피해량과 연사 속도(RPM)는?", "keywords": ["43", "750"], "sources": ["42.3"]},
+  {"id": 12, "category": "단일사실", "question": "메타 로테이션은 몇 개월마다 무기군을 바꿔?", "keywords": ["4"], "sources": ["42.3"]},
+  {"id": 13, "category": "단일사실", "question": "기본 훈련은 몇 개 챕터로 되어 있어?", "keywords": ["17"], "sources": ["42.2"]},
+  {"id": 14, "category": "단일사실", "question": "새 컨텐더 이름이 뭐야?", "keywords": ["글라시아"], "sources": ["42.2"]},
+  {"id": 15, "category": "다중패치", "question": "발차기와 관련된 변경은 어느 패치들에 있었어?", "keywords": ["43.1", "44.1"], "sources": ["43.1", "44.1"]},
+  {"id": 16, "category": "문서없음", "question": "44.1에서 SMG는 뭐가 바뀌었어?", "expect_not_found": true},
+  {"id": 17, "category": "문서없음", "question": "43.2에서 새로 추가된 총기는 뭐야?", "expect_not_found": true},
+  {"id": 18, "category": "문서없음", "question": "에란겔 맵은 어떻게 바뀌었어?", "expect_not_found": true},
+  {"id": 19, "category": "문서없음", "question": "42.2 경쟁전 시즌 보상은 뭐야?", "expect_not_found": true},
+  {"id": 20, "category": "잘못된전제", "question": "43.2에서 추가된 RPD의 피해량은 얼마야?", "keywords": ["42.3", "43"], "sources": ["42.3"]}
+]

@@ -1,0 +1,5 @@
+.env
+docs/
+qa_log.db
+__pycache__/
+.venv/
